@@ -45,12 +45,6 @@ function App() {
     userEmail: "",
     userPassword: "",
     userPasswordConfirm: "",
-    userName: "",
-    userBirthdateYear: "",
-    userBirthdateMonth: "",
-    userBirthdateDay: "",
-    userSex: "",
-    userPhone: "",
     userPicture: "",
     userNickname: "",
     userCollege: [],
@@ -85,10 +79,10 @@ function App() {
         <UserContext.Provider value={{ user, setUser }}>
           <BrowserRouter>
             <Routes>
-              <Route path="/*" element={<Home />} />
-              <Route path="/mypage" element={<MyPage />} />
+              {/*<Route path="/*" element={<Home />} />
+              <Route path="/mypage" element={<MyPage />} />*/}
               <Route path="/signup" element={<Signup />} />
-              <Route path="/signupsecond" element={<SignupSecond />} />
+              {/*<Route path="/signupsecond" element={<SignupSecond />} />*/}
             </Routes>
           </BrowserRouter>
         </UserContext.Provider>

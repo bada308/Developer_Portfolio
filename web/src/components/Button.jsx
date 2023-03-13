@@ -2,19 +2,22 @@ import React from "react";
 
 import "./button.css";
 
-const Button = (props) => {
+const Button = ({ type, onClick, disabled, text, className }) => {
   return (
-    <div className="btn">
+    <div className="Button">
       <button
-        type="submit"
-        className={props.condition ? "form-button" : "form-button-disabled"}
-        onClick={props.onClick}
-        href={props.href}
-        disabled={props.disabled}
+        type={type}
+        className={className}
+        onClick={onClick}
+        disabled={disabled}
       >
-        다음
+        {text}
       </button>
     </div>
   );
+};
+
+Button.defaultProps = {
+  disabled: false,
 };
 export default Button;

@@ -1,166 +1,196 @@
-import { UserContext } from "../App";
-import React, { useState, useEffect, useContext } from "react";
-
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import Button from "../components/Button";
 import Formbox from "../components/Formbox";
-import "../components/signup.css";
+import axios from "axios";
+import { useCallback } from "react";
 
 const Signup = () => {
-  const navigate = useNavigate();
-  const { user, setUser } = useContext(UserContext);
+  // State
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPwd, setConfirmPwd] = useState("");
+  const [nickname, setNickname] = useState("");
 
-  const onChangeInput = e => {
-    const { id, value } = e.target;
-    setUser(prev => ({
-      ...prev,
-      [id]: value,
-    }));
+  const [emailMsg, setEmailMsg] = useState("");
+  const [pwdMsg, setPwdMsg] = useState("");
+  const [confirmPwdMsg, setConfirmPwdMsg] = useState("");
+  const [nicknameMsg, setNicknameMsg] = useState("");
+
+  // 유효성 검사 함수
+  const validateEmail = (email) => {
+    return email
+      .toString()
+      .toLowerCase()
+      .match(/([\w-.]+)@(([\w-]+\.)+)([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/);
   };
 
-    useEffect(() => {
-      console.log(user);
-    });
+  const validatePwd = (password) => {
+    return password
+      .toString()
+      .toLowerCase()
+      .match(/^(?=.*[a-zA-Z])(?=.*[!@#$%^*+=-])(?=.*[0-9]).{8,25}$/);
+  };
 
-  const emailRegex =
-    /([\w-.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
-  const isRegexEmail =
-    emailRegex.test(user.userEmail) || user.userEmail.length === 0;
-  const isRegexEmailMessage = isRegexEmail
-    ? ""
-    : "올바른 이메일 형식이 아닙니다.";
+  const validateNickname = (nickname) => {
+    return nickname
+      .toString()
+      .toLowerCase()
+      .match(/^[ㄱ-ㅎ|가-힣|a-z|A-Z|0-9|].{1,8}$/);
+  };
 
-  const passwordRegex = /^(?=.*[a-zA-Z])(?=.*[!@#$%^*+=-])(?=.*[0-9]).{8,25}$/;
-  const isRegexPassword = passwordRegex.test(user.userPassword);
-  const isRegexPasswordMessage = isRegexPassword
-    ? "안전"
-    : "사용불가 (영문자, 숫자, 특수문자 조합/ 8~20자)";
+  const [validSignup, setValidSignup] = useState(false);
 
-  const isRegexPasswordConfirm =
-    user.userPassword === user.userPasswordConfirm ||
-    user.userPasswordConfirm.length === 0;
-  const isRegexPasswordConfirmMessage = isRegexPasswordConfirm
-    ? ""
-    : "비밀번호가 일치하지 않습니다.";
+  const isValid = useCallback(() => {
+    if (
+      validateEmail(email) &&
+      validatePwd(password) &&
+      password === confirmPwd &&
+      validateNickname(nickname)
+    ) {
+      setValidSignup(true);
+    } else setValidSignup(false);
+  }, [email, password, confirmPwd, nickname]);
 
-  const isRegexName =
-    (user.userName.length > 1 && user.userName.length < 6) ||
-    user.userName.length === 0;
-  const isRegexNameMessage = isRegexName ? "" : "2~5자";
+  const onChangeEmail = (e) => {
+    setEmail(e.target.value);
+    if (validateEmail(email)) {
+      setEmailMsg("");
+    } else {
+      setEmailMsg("이메일 형식이 올바르지 않습니다.");
+    }
+  };
 
-  const isValidSignup =
-    isRegexEmail &&
-    isRegexPassword &&
-    isRegexPasswordConfirm &&
-    isRegexName &&
-    user.userEmail &&
-    user.userPassword &&
-    user.userPasswordConfirm &&
-    user.userName;
+  const onChangePwd = (e) => {
+    setPassword(e.target.value);
+    if (validatePwd(password)) {
+      setPwdMsg("");
+    } else {
+      setPwdMsg("영문, 숫자, 특수기호 조합으로 8자리 이상 입력해주세요.");
+    }
+  };
 
-  function handleSubmit(e) {
+  const onChangeConfirmPwd = (e) => {
+    setConfirmPwd(e.target.value);
+
+    if (password === confirmPwd) {
+      setConfirmPwdMsg("");
+    } else {
+      setConfirmPwdMsg("비밀번호가 일치하지 않습니다.");
+    }
+  };
+
+  const onChangeNickname = (e) => {
+    setNickname(e.target.value);
+    if (validateNickname(nickname)) {
+      setNicknameMsg("");
+    } else {
+      setNicknameMsg("1글자 이상 9글자 미만으로 입력해주세요.");
+    }
+  };
+
+  // 이메일 & 닉네임 중복 여부
+  const [checkMail, setCheckMail] = useState(false);
+  const [checkNickname, setCheckNickname] = useState(false);
+
+  // 이메일 중복 체크
+  const onCheckEmail = async (e) => {
     e.preventDefault();
-    navigate("/signupsecond");
-  }
+    try {
+      const res = await axios.post("", { email });
+      const { result } = res.data;
+      if (!result) {
+        setEmailMsg("이미 등록된 메일입니다. 다시 입력해주세요.");
+        setCheckMail(false);
+      } else {
+        setEmailMsg("사용 가능한 메일입니다.😊");
+        setCheckMail(true);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  // 닉네임 중복 체크
+  const onCheckNickname = async (e) => {
+    e.preventDefault();
+
+    try {
+      const res = await axios.post("", { nickname });
+      const { result } = res.data;
+
+      if (!result) {
+        setNicknameMsg("이미 등록된 닉네임입니다. 다시 입력해주세요.");
+        setCheckNickname(false);
+      } else {
+        setNicknameMsg("사용 가능한 닉네임입니다.😊");
+        setCheckNickname(true);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  const handleSubmit = () => {
+    console.log("submit");
+  };
   return (
-    <div className="body">
-      <section className="signup-form">
-        <h1 style={{ size: 20 }}>회원가입</h1>
-        <form>
+    <div className="Login">
+      <form onSubmit={handleSubmit}>
+        <div>
           <Formbox
-            htmlFor="userEmail"
-            name="이메일*"
-            type="email"
-            title="이메일"
-            onChange={onChangeInput}
-            maxLength="30"
-            message={isRegexEmailMessage}
-          />
-          <Formbox
-            htmlFor="userPassword"
-            name="비밀번호*"
-            type="password"
-            title="비밀번호(숫자, 영문자, 특수문자 조합/ 8~20자)"
-            onChange={onChangeInput}
-            maxLength="20"
-          />
-          {user.userPassword.length > 0 && (
-            <div className={`message ${isRegexPassword ? "success" : "error"}`}>
-              {isRegexPasswordMessage}
-            </div>
-          )}
-          <Formbox
-            htmlFor="userPasswordConfirm"
-            name="비밀번호 확인*"
-            type="password"
-            title="비밀번호 확인"
-            onChange={onChangeInput}
-            maxLength="20"
-            message={isRegexPasswordConfirmMessage}
-          />
-          <Formbox
-            htmlFor="userName"
-            name="이름*"
-            type="text"
-            title="이름"
-            onChange={onChangeInput}
-            maxLength="10"
-            message={isRegexNameMessage}
-          />
-          <div className="birthdate-form">
-            <label htmlFor="userBirthdate">생년월일</label>
-            <br></br>
-            <input
-              type="number"
-              id="userBirthdateYear"
-              title="년"
-              placeholder="년"
-              className="year"
-              onChange={onChangeInput}
-              autoComplete="off"
-            ></input>
-            <input
-              type="number"
-              id="userBirthdateMonth"
-              title="월"
-              placeholder="월"
-              className="month"
-              onChange={onChangeInput}
-              autoComplete="off"
-            ></input>
-            <input
-              type="number"
-              id="userBirthdateDay"
-              title="일"
-              placeholder="일"
-              className="day"
-              onChange={onChangeInput}
-              autoComplete="off"
-            ></input>
-          </div>
-          <div className="formbox">
-            <label htmlFor="userSex">성별</label>
-            <select id="userSex" onChange={onChangeInput}>
-              <option value="">성별</option>
-              <option value="man">남자</option>
-              <option value="woman">여자</option>
-            </select>
-          </div>
-          <Formbox
-            htmlFor="userPhone"
-            name="휴대전화"
-            type="number"
-            title="전화번호"
-            onChange={onChangeInput}
+            htmlFor={"email"}
+            name={"이메일"}
+            type={"email"}
+            onChange={onChangeEmail}
+            message={emailMsg}
+            msgLen={emailMsg.length}
+            placeholder={"123456@example.com"}
           />
           <Button
-            id="submitRegister"
-            onClick={e => handleSubmit(e)}
-            condition={isValidSignup}
-            disabled={!isValidSignup}
+            type={"button"}
+            onClick={onCheckEmail}
+            text={"이메일 확인"}
+            className={"button"}
           />
-        </form>
-      </section>
+        </div>
+        <Formbox
+          htmlFor={"password"}
+          name={"비밀번호"}
+          type={"password"}
+          onChange={onChangePwd}
+          message={pwdMsg}
+          msgLen={pwdMsg.length}
+        />
+        <Formbox
+          htmlFor={"confirmPwd"}
+          name={"비밀번호 확인"}
+          type={"password"}
+          onChange={onChangeConfirmPwd}
+          message={confirmPwdMsg}
+          msgLen={confirmPwdMsg.length}
+        />
+        <div>
+          <Formbox
+            htmlFor={"nickname"}
+            name={"닉네임"}
+            type={"text"}
+            onChange={onChangeNickname}
+            message={nicknameMsg}
+            msgLen={nicknameMsg.length}
+          />
+          <Button
+            type={"button"}
+            onClick={onCheckNickname}
+            text={"닉네임 확인"}
+            className={"button"}
+          />
+        </div>
+        <Button
+          type={"submit"}
+          disabled={!validSignup}
+          text={"회원가입"}
+          className={"submit"}
+        />
+      </form>
     </div>
   );
 };

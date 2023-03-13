@@ -1,17 +1,29 @@
-import React from 'react'
+import React from "react";
 
-import "./formbox.css"
+import "./formbox.css";
 
-const Formbox = (props) => {
+const Formbox = ({
+  htmlFor,
+  name,
+  type,
+  onChange,
+  message,
+  msgLen,
+  placeholder,
+}) => {
   return (
-    <div>
-        <div className="formbox">
-            <label htmlFor={props.htmlFor}>{props.name}</label> 
-            <input id={props.htmlFor} type={props.type} title={props.title} onChange={props.onChange} maxLength={props.max} autoComplete='off'></input>
-            <span className={props.className}>{props.message}</span>
-        </div>
+    <div className="Formbox">
+      <label htmlFor={htmlFor}>{name}</label>
+      <input
+        id={htmlFor}
+        type={type}
+        onChange={onChange}
+        autoComplete="off"
+        placeholder={placeholder}
+      ></input>
+      {msgLen > 0 && <span>{message}</span>}
     </div>
-  )
-}
+  );
+};
 
-export default Formbox
+export default Formbox;
